@@ -1,0 +1,24 @@
+---
+clusterName: kubernetes
+clusterEndpoint: https://192.168.30.20:6443
+
+# renovate: datasource=github-releases depName=siderolabs/talos
+talosVersion: v1.14.2
+# renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+kubernetesVersion: v1.37.1
+
+secretsPath: secrets.sops.yaml
+
+nodes:
+  - host: "k8s-0"
+    ip: "192.168.30.10"
+    role: control-plane
+    schematicId: "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
+    secureboot: true
+    data:
+      installDisk: "/dev/nvme0n1"
+      installDiskSerial: ""
+      macAddr: "58:47:ca:76:12:b9"
+      mtu: 1500
+      encryptDisk: true
+      kernelModules: []

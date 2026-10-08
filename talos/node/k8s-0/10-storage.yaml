@@ -1,0 +1,13 @@
+﻿---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: storage0
+selector:
+  match: mac(link.hardware_addr) == "58:47:ca:76:12:b8" # SFP port MAC
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: storage0
+mtu: 9000
+addresses:
+  - address: 192.168.40.10/24
