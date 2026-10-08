@@ -9,12 +9,15 @@ on:
       - main
     paths:
       - .github/labels.yaml
+  schedule:
+    - cron: 0 0 * * *
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
-  label-sync:
-    name: Label Sync
+  main:
+    name: Label Sync - Sync Labels
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,6 +27,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          sparse-checkout: .github/labels.yaml
 
       - name: Sync Labels
         uses: EndBug/label-sync@52074158190acb45f3077f9099fea818aa43f97a # v2.3.3
