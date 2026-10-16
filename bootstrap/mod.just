@@ -48,6 +48,7 @@ talos-kubeconfig:
 [private]
 apps-crds:
     just log info "Applying CRDs" stage "{{ recipe_name() }}"
+    export SECRET_DOMAIN="$(op read op://Kubernetes/cluster-secrets/SECRET_DOMAIN)"
     if ! helmfile --file "{{ source_directory() }}/helmfile/crds.yaml" template --quiet | yq eval-all --exit-status 'select(.kind == "CustomResourceDefinition")' | kubectl apply --server-side --force-conflicts --filename -; then
         just log fatal "Failed to apply crds"
     fi
@@ -55,6 +56,7 @@ apps-crds:
 [private]
 apps-helm:
     just log info "Syncing helmfile" stage "{{ recipe_name() }}"
+    export SECRET_DOMAIN="$(op read op://Kubernetes/cluster-secrets/SECRET_DOMAIN)"
     if ! helmfile --file "{{ source_directory() }}/helmfile/apps.yaml" sync --hide-notes; then
         just log fatal "Failed to sync helmfile"
     fi
