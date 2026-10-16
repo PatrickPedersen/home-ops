@@ -88,6 +88,14 @@ apps-secrets:
             just log fatal "Failed to apply secret" resource "$name"
         fi
     done
+    for dir in "{{ source_directory() }}/kustomize/personal"/*/; do
+        name="$(basename "$dir")"
+        if kustomize build "$dir" | op inject | kubectl apply --server-side --filename - &>/dev/null; then
+            just log info "Secret applied" resource "$name"
+        else
+            just log fatal "Failed to apply secret" resource "$name"
+        fi
+    done
 
 # Wait until nodes register as Ready=False. They only become Ready=True once the CNI is healthy.
 [private]
