@@ -9,5 +9,9 @@ components:
 
 resources:
   - ./namespace.yaml
+  - ./media-nfs.yaml
   - ./flaresolverr/ks.yaml
   - ./prowlarr/ks.yaml
+  - ./qbittorrent/ks.yaml
+  - ./radarr/ks.yaml
+  - ./sonarr/ks.yaml
