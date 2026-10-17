@@ -12,6 +12,7 @@ resources:
   - ./forward-auth.yaml
   - ./media-nfs.yaml
   - ./bazarr/ks.yaml
+  - ./bookorbit/ks.yaml
   - ./flaresolverr/ks.yaml
   - ./jellyfin/ks.yaml
   - ./prowlarr/ks.yaml

@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/postgresql.cnpg.io/cluster_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: bookorbit-pg
+spec:
+  instances: 1
+  # Single instance on a single node: a PDB would block every node drain.
+  enablePDB: false
+  # "standard" images ship pgvector, which BookOrbit needs.
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-standard-trixie
+  storage:
+    size: 2Gi
+    storageClass: openebs-hostpath
+  bootstrap:
+    initdb:
+      database: bookorbit
+      owner: bookorbit
+      # Created as superuser; the app's own migrations can't (vector isn't trusted).
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm
+        - CREATE EXTENSION IF NOT EXISTS unaccent
+        - CREATE EXTENSION IF NOT EXISTS vector
+  # Continuous WAL archiving + base backups to B2 (see objectstore.yaml).
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: bookorbit-pg
