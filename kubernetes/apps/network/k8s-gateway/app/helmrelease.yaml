@@ -10,12 +10,37 @@ spec:
   interval: 1h
   values:
     fullnameOverride: k8s-gateway
-    domain: "${SECRET_DOMAIN}"
-    ttl: 1
     service:
       type: LoadBalancer
       port: 53
       annotations:
         lbipam.cilium.io/ips: "192.168.30.22"
       externalTrafficPolicy: Cluster
-    watchedResources: ["HTTPRoute", "Service"]
+    servers:
+      - zones:
+          - zone: .
+            use_tcp: true
+        port: 53
+        plugins:
+          - name: errors
+          - name: health
+            configBlock: |-
+              lameduck 10s
+          - name: ready
+          - name: k8s_gateway
+            parameters: ${SECRET_DOMAIN}
+            configBlock: |-
+              ttl 1
+              resources HTTPRoute Service
+              # Names without a cluster route fall through to `forward`,
+              # so records that only exist in Cloudflare still resolve.
+              fallthrough
+          - name: prometheus
+            parameters: 0.0.0.0:9153
+          - name: forward
+            parameters: . 1.1.1.1 1.0.0.1
+          - name: cache
+            parameters: 30
+          - name: loop
+          - name: reload
+          - name: loadbalance
