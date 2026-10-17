@@ -18,6 +18,10 @@ links:
   - storage0
   - storage1
 bondMode: 802.3ad # LACP: needs a matching aggregate on the switch ports
+# Without link monitoring a bounced link is never marked up again.
+miimon: 100
+updelay: 200
+downdelay: 200
 mtu: 9000
 addresses:
   - address: 192.168.40.10/24

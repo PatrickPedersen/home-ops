@@ -11,6 +11,8 @@ name: bond0
 links:
   - ethSel0
 bondMode: active-backup
+# Without link monitoring a bounced link is never marked up again.
+miimon: 100
 mtu: {{ .Node.Data.mtu }}
 addresses:
   - address: "{{ .Node.IP }}/24"

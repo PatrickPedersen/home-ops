@@ -22,7 +22,7 @@ spec:
               repository: ghcr.io/squat/generic-device-plugin
               tag: latest@sha256:dc192e164c69b03f156765793a1be62ca437709ae477b27ca7d8f3dcf5021576
             # Exposes host devices as schedulable resources, so pods request
-            # `squat.ai/dri` / `squat.ai/tun` instead of running privileged.
+            # `devic.es/dri` / `devic.es/tun` instead of running privileged.
             args:
               - --log-level=info
               - --config=/config/config.yml
