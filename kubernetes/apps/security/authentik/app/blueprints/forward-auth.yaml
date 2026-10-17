@@ -21,8 +21,9 @@ entries:
       invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
       access_token_validity: hours=24
       # The apps' APIs check their own API key; lets Seerr, Prowlarr sync and
-      # mobile apps keep working through the hostname.
-      skip_path_regex: ^/api/.*
+      # mobile apps keep working through the hostname. In domain mode this is
+      # matched against the full URL, which arrives without a scheme via Envoy.
+      skip_path_regex: ^(https?:)?//[^/]+/api/
   - model: authentik_core.application
     id: forward-auth-app
     identifiers: { slug: forward-auth }
