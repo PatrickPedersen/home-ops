@@ -29,6 +29,11 @@ spec:
             secretKeyRef:
               name: authentik-secret
               key: LDAP_BIND_PASSWORD
+        - name: BOOKORBIT_CLIENT_SECRET # read by blueprints/bookorbit.yaml
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secret
+              key: BOOKORBIT_CLIENT_SECRET
     blueprints:
       configMaps: [authentik-blueprints]
     authentik:
