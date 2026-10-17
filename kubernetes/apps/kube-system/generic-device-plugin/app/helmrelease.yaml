@@ -59,11 +59,10 @@ spec:
           - path: /config/config.yml
             subPath: config.yml
             readOnly: true
+      # Must stay writable: the kubelet creates /dev/termination-log in it.
       dev:
         type: hostPath
         hostPath: /dev
-        globalMounts:
-          - readOnly: true
       device-plugins:
         type: hostPath
         hostPath: /var/lib/kubelet/device-plugins
