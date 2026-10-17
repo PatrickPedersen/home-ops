@@ -60,13 +60,16 @@ spec:
               TZ: Europe/Copenhagen
               QBT_WEBUI_PORT: &port 8080
             probes:
+              # TCP, not HTTP: the WebUI API answers 403 to unauthenticated
+              # probes from the node.
               liveness: &probe
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/v2/app/version
+                  tcpSocket:
                     port: *port
+                  periodSeconds: 10
+                  failureThreshold: 6
               readiness: *probe
             securityContext:
               allowPrivilegeEscalation: false
