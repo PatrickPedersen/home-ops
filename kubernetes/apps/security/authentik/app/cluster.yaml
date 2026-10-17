@@ -7,6 +7,8 @@ metadata:
 spec:
   # ponytail: single instance, no backups yet; add barman-cloud to Backblaze before relying on it
   instances: 1
+  # Single instance on a single node: a PDB would block every node drain.
+  enablePDB: false
   imageName: ghcr.io/cloudnative-pg/postgresql:18.6-standard-trixie
   storage:
     size: 5Gi
