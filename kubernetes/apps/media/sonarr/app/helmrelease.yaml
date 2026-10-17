@@ -22,6 +22,10 @@ spec:
               SONARR__APP__INSTANCENAME: Sonarr
               SONARR__SERVER__PORT: &port 8989
               SONARR__LOG__DBENABLED: "False"
+              # Restored config says External (proxy auth), but nothing in front
+              # enforces it yet. Switch back to External once Authentik forward auth is in place.
+              SONARR__AUTH__METHOD: Forms
+              SONARR__AUTH__REQUIRED: Enabled
             probes:
               liveness: &probe
                 enabled: true
