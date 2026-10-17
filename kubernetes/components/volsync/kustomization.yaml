@@ -1,0 +1,11 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+# Nightly restic backup of the app's PVC (named ${APP}) to Backblaze B2.
+# Use from an app's Flux Kustomization:
+#   components: [../../../../components/volsync]
+#   postBuild.substitute: { APP: <name>, VOLSYNC_UID: <uid the app runs as> }
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - ./externalsecret.yaml
+  - ./replicationsource.yaml

@@ -1,0 +1,17 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: snapshot-controller
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: snapshot-controller
+  interval: 1h
+  values:
+    # Installed for the VolumeSnapshot CRDs VolSync requires; our local
+    # volumes are backed up with copyMethod: Direct, not snapshots.
+    controller:
+      serviceMonitor:
+        create: false

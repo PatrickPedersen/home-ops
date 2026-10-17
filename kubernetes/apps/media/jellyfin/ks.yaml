@@ -6,11 +6,20 @@ metadata:
   name: jellyfin
 spec:
   dependsOn:
+    - name: volsync
+      namespace: volsync-system
     - name: openebs
       namespace: openebs-system
+  components:
+    - ../../../../components/volsync
   interval: 1h
   path: ./kubernetes/apps/media/jellyfin/app
   postBuild:
+    substitute:
+      APP: jellyfin
+      VOLSYNC_UID: "100000"
+      VOLSYNC_GID: "100000"
+      VOLSYNC_CACHE_CAPACITY: 5Gi
     substituteFrom:
       - name: cluster-secrets
         kind: Secret

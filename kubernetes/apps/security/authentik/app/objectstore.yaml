@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/barmancloud.cnpg.io/objectstore_v1.json
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: authentik-pg
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: s3://${B2_BUCKET}/cnpg/
+    endpointURL: https://${B2_ENDPOINT}
+    s3Credentials:
+      accessKeyId:
+        name: authentik-pg-backup
+        key: AWS_ACCESS_KEY_ID
+      secretAccessKey:
+        name: authentik-pg-backup
+        key: AWS_SECRET_ACCESS_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip

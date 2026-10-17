@@ -6,13 +6,21 @@ metadata:
   name: qbittorrent
 spec:
   dependsOn:
+    - name: volsync
+      namespace: volsync-system
     - name: openebs
       namespace: openebs-system
     - name: onepassword-connect
       namespace: external-secrets
+  components:
+    - ../../../../components/volsync
   interval: 1h
   path: ./kubernetes/apps/media/qbittorrent/app
   postBuild:
+    substitute:
+      APP: qbittorrent
+      VOLSYNC_UID: "100000"
+      VOLSYNC_GID: "100000"
     substituteFrom:
       - name: cluster-secrets
         kind: Secret

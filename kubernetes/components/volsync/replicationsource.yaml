@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/volsync.backube/replicationsource_v1alpha1.json
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: "${APP}"
+spec:
+  sourcePVC: "${APP}"
+  trigger:
+    schedule: "${VOLSYNC_SCHEDULE:=0 3 * * *}"
+  restic:
+    # openebs-hostpath has no snapshots: back up the live volume directly.
+    # ponytail: live copy of SQLite apps, consistent enough for these app DBs; add pre-backup quiescing if a restore ever comes back corrupt
+    copyMethod: Direct
+    repository: "${APP}-volsync-secret"
+    pruneIntervalDays: 7
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+    cacheStorageClassName: openebs-hostpath
+    cacheAccessModes: ["ReadWriteOnce"]
+    cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:=1Gi}"
+    moverSecurityContext:
+      runAsUser: ${VOLSYNC_UID:=100000}
+      runAsGroup: ${VOLSYNC_GID:=100000}
+      fsGroup: ${VOLSYNC_GID:=100000}

@@ -6,11 +6,19 @@ metadata:
   name: bazarr
 spec:
   dependsOn:
+    - name: volsync
+      namespace: volsync-system
     - name: openebs
       namespace: openebs-system
+  components:
+    - ../../../../components/volsync
   interval: 1h
   path: ./kubernetes/apps/media/bazarr/app
   postBuild:
+    substitute:
+      APP: bazarr
+      VOLSYNC_UID: "100000"
+      VOLSYNC_GID: "100000"
     substituteFrom:
       - name: cluster-secrets
         kind: Secret

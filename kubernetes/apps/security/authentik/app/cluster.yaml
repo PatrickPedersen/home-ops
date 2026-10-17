@@ -5,7 +5,6 @@ kind: Cluster
 metadata:
   name: authentik-pg
 spec:
-  # ponytail: single instance, no backups yet; add barman-cloud to Backblaze before relying on it
   instances: 1
   # Single instance on a single node: a PDB would block every node drain.
   enablePDB: false
@@ -17,3 +16,9 @@ spec:
     initdb:
       database: authentik
       owner: authentik
+  # Continuous WAL archiving + base backups to B2 (see objectstore.yaml).
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: authentik-pg

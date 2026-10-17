@@ -6,11 +6,19 @@ metadata:
   name: prowlarr
 spec:
   dependsOn:
+    - name: volsync
+      namespace: volsync-system
     - name: openebs
       namespace: openebs-system
+  components:
+    - ../../../../components/volsync
   interval: 1h
   path: ./kubernetes/apps/media/prowlarr/app
   postBuild:
+    substitute:
+      APP: prowlarr
+      VOLSYNC_UID: "1000"
+      VOLSYNC_GID: "1000"
     substituteFrom:
       - name: cluster-secrets
         kind: Secret
