@@ -9,3 +9,9 @@ resources:
   - ./objectstore.yaml
   - ./ocirepository.yaml
   - ./scheduledbackup.yaml
+configMapGenerator:
+  - name: authentik-blueprints
+    files:
+      - ./blueprints/ldap.yaml
+generatorOptions:
+  disableNameSuffixHash: true

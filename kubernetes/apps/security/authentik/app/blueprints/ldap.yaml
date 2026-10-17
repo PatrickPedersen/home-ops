@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+# LDAP outpost for apps that only speak LDAP (Jellyfin). Replaces lldap.
+version: 1
+metadata:
+  name: LDAP
+entries:
+  - model: authentik_core.group
+    identifiers: { name: media }
+  - model: authentik_core.group
+    identifiers: { name: media_admin }
+
+  # Bind account; only it may search the whole directory.
+  - model: authentik_rbac.role
+    id: ldap-search-role
+    identifiers: { name: LDAP search }
+    attrs:
+      permissions:
+        - authentik_providers_ldap.search_full_directory
+  - model: authentik_core.group
+    id: ldap-search-group
+    identifiers: { name: LDAP search }
+    attrs:
+      roles: [!KeyOf ldap-search-role]
+  - model: authentik_core.user
+    identifiers: { username: ldap_bind }
+    attrs:
+      name: LDAP bind
+      path: service-accounts
+      password: !Env LDAP_BIND_PASSWORD
+      groups: [!KeyOf ldap-search-group]
+
+  - model: authentik_providers_ldap.ldapprovider
+    id: ldap-provider
+    identifiers: { name: LDAP }
+    attrs:
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
+      base_dn: dc=home,dc=patrickpedersen,dc=tech
+      bind_mode: cached
+      search_mode: cached
+  - model: authentik_core.application
+    identifiers: { slug: ldap }
+    attrs:
+      name: LDAP
+      provider: !KeyOf ldap-provider
+  - model: authentik_outposts.outpost
+    identifiers: { name: ldap }
+    attrs:
+      type: ldap
+      providers: [!KeyOf ldap-provider]
+      service_connection:
+        !Find [authentik_outposts.kubernetesserviceconnection, [name, Local Kubernetes Cluster]]
+      config:
+        authentik_host: http://authentik-server.security.svc.cluster.local
+        kubernetes_namespace: security
