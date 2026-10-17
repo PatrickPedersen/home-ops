@@ -28,6 +28,7 @@ spec:
       annotations:
         gatus.home-operations.com/enabled: "false"
       hostnames:
+        - "{{ .Release.Name }}.${SECRET_DOMAIN}"
         - status.${SECRET_DOMAIN}
       parentRefs:
         - name: envoy-external
