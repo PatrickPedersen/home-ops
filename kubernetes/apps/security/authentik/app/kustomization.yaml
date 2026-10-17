@@ -8,10 +8,12 @@ resources:
   - ./helmrelease.yaml
   - ./objectstore.yaml
   - ./ocirepository.yaml
+  - ./referencegrant.yaml
   - ./scheduledbackup.yaml
 configMapGenerator:
   - name: authentik-blueprints
     files:
+      - ./blueprints/forward-auth.yaml
       - ./blueprints/ldap.yaml
 generatorOptions:
   disableNameSuffixHash: true

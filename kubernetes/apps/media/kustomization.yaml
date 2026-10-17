@@ -9,6 +9,7 @@ components:
 
 resources:
   - ./namespace.yaml
+  - ./forward-auth.yaml
   - ./media-nfs.yaml
   - ./bazarr/ks.yaml
   - ./flaresolverr/ks.yaml

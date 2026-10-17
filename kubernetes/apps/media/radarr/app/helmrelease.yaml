@@ -22,10 +22,8 @@ spec:
               RADARR__APP__INSTANCENAME: Radarr
               RADARR__SERVER__PORT: &port 7878
               RADARR__LOG__DBENABLED: "False"
-              # Restored config says External (proxy auth), but nothing in front
-              # enforces it yet. Switch back to External once Authentik forward auth is in place.
-              RADARR__AUTH__METHOD: Forms
-              RADARR__AUTH__REQUIRED: Enabled
+              # Login is enforced by Authentik forward auth (media/forward-auth.yaml).
+              RADARR__AUTH__METHOD: External
             probes:
               liveness: &probe
                 enabled: true
