@@ -21,6 +21,9 @@ spec:
       failed: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
       current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   interval: 1h
+  # After a reboot the store briefly reports Failed until Connect is up;
+  # retry quickly instead of waiting a full interval.
+  retryInterval: 1m
   path: ./kubernetes/apps/external-secrets/onepassword-connect/app
   prune: true
   sourceRef:
