@@ -9,6 +9,72 @@ entries:
     id: bookorbit-group
     identifiers: { name: bookorbit }
 
+  # Permission groups, sent in the "groups" claim. Names must match the group
+  # mappings in BookOrbit (Settings → Authentication → provider), one each.
+  - model: authentik_core.group
+    id: book-app-settings
+    identifiers: { name: book_app_settings }
+  - model: authentik_core.group
+    id: book-delete-books
+    identifiers: { name: book_delete_books }
+  - model: authentik_core.group
+    id: book-manage-book-dock
+    identifiers: { name: book_manage_book_dock }
+  - model: authentik_core.group
+    id: book-manage-email
+    identifiers: { name: book_manage_email }
+  - model: authentik_core.group
+    id: book-manage-icons
+    identifiers: { name: book_manage_icons }
+  - model: authentik_core.group
+    id: book-manage-libraries
+    identifiers: { name: book_manage_libraries }
+  - model: authentik_core.group
+    id: book-manage-users
+    identifiers: { name: book_manage_users }
+  - model: authentik_core.group
+    id: book-metadata-config
+    identifiers: { name: book_metadata_config }
+  - model: authentik_core.group
+    id: book-view-audit-log
+    identifiers: { name: book_view_audit_log }
+  - model: authentik_core.group
+    id: book-view-user-activity
+    identifiers: { name: book_view_user_activity }
+
+  # Join only this one: a member counts as a member of all its parents, so it
+  # grants access (bookorbit) and every permission group above.
+  - model: authentik_core.group
+    identifiers: { name: bookorbit_admin }
+    attrs:
+      parents:
+        - !KeyOf bookorbit-group
+        - !KeyOf book-app-settings
+        - !KeyOf book-delete-books
+        - !KeyOf book-manage-book-dock
+        - !KeyOf book-manage-email
+        - !KeyOf book-manage-icons
+        - !KeyOf book-manage-libraries
+        - !KeyOf book-manage-users
+        - !KeyOf book-metadata-config
+        - !KeyOf book-view-audit-log
+        - !KeyOf book-view-user-activity
+
+  # The default profile mapping only lists direct groups; this one includes
+  # inherited ones, so bookorbit_admin expands to the book_* groups.
+  - model: authentik_providers_oauth2.scopemapping
+    id: bookorbit-profile
+    identifiers: { name: "BookOrbit: profile with inherited groups" }
+    attrs:
+      scope_name: profile
+      expression: |
+        return {
+            "name": request.user.name,
+            "preferred_username": request.user.username,
+            "nickname": request.user.username,
+            "groups": [group.name for group in request.user.all_groups()],
+        }
+
   - model: authentik_providers_oauth2.oauth2provider
     id: bookorbit-provider
     identifiers: { name: BookOrbit }
@@ -33,10 +99,7 @@ entries:
             authentik_providers_oauth2.scopemapping,
             [managed, goauthentik.io/providers/oauth2/scope-email],
           ]
-        - !Find [
-            authentik_providers_oauth2.scopemapping,
-            [managed, goauthentik.io/providers/oauth2/scope-profile],
-          ]
+        - !KeyOf bookorbit-profile
   - model: authentik_core.application
     id: bookorbit-app
     identifiers: { slug: bookorbit }
