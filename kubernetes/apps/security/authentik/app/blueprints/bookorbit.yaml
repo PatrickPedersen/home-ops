@@ -41,6 +41,12 @@ entries:
   - model: authentik_core.group
     id: book-view-user-activity
     identifiers: { name: book_view_user_activity }
+  - model: authentik_core.group
+    id: book-auto-approve-requests
+    identifiers: { name: book_auto_approve_requests }
+  - model: authentik_core.group
+    id: book-manage-book-requests
+    identifiers: { name: book_manage_book_requests }
 
   # Join only this one: a member counts as a member of all its parents, so it
   # grants access (bookorbit) and every permission group above.
@@ -59,6 +65,8 @@ entries:
         - !KeyOf book-metadata-config
         - !KeyOf book-view-audit-log
         - !KeyOf book-view-user-activity
+        - !KeyOf book-auto-approve-requests
+        - !KeyOf book-manage-book-requests
 
   # The default profile mapping only lists direct groups; this one includes
   # inherited ones, so bookorbit_admin expands to the book_* groups.
@@ -82,6 +90,8 @@ entries:
       client_type: confidential
       client_id: bookorbit
       client_secret: !Env BOOKORBIT_CLIENT_SECRET
+      # Defaults to none when created from a blueprint, which rejects every login.
+      grant_types: [authorization_code, refresh_token]
       authorization_flow:
         !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
       invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
