@@ -55,11 +55,21 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
     service:
       app:
+        # Real health check; see jellyfin for why the route isn't monitored.
+        annotations:
+          gatus.home-operations.com/enabled: "true"
+          gatus.home-operations.com/endpoint: |-
+            group: internal
+            ui: { hide-hostname: true, hide-url: true }
+            url: http://radarr.media.svc.cluster.local:7878/ping
+            conditions: ["[STATUS] == 200", "[BODY].status == OK"]
         ports:
           http:
             port: *port
     route:
       app:
+        annotations:
+          gatus.home-operations.com/enabled: "false"
         hostnames:
           - "{{ .Release.Name }}.${SECRET_DOMAIN}"
         parentRefs:

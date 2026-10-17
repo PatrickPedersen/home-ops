@@ -43,6 +43,15 @@ spec:
       ui:
         enabled: true
         rollOutPods: true
+        service:
+          # Real health check; see jellyfin for why the route isn't monitored.
+          annotations:
+            gatus.home-operations.com/enabled: "true"
+            gatus.home-operations.com/endpoint: |-
+              group: internal
+              ui: { hide-hostname: true, hide-url: true }
+              url: http://hubble-ui.kube-system.svc.cluster.local/
+              conditions: ["[STATUS] == 200"]
     ipam:
       mode: kubernetes
     ipv4NativeRoutingCIDR: "10.42.0.0/16"

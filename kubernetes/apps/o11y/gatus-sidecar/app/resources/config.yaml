@@ -26,6 +26,22 @@ endpoints:
     conditions:
       - "[CONNECTED] == true"
 
+  # Its chart can't annotate the Service, so it's listed here.
+  - name: flux-operator
+    group: internal
+    ui: { hide-hostname: true, hide-url: true }
+    url: http://flux-operator.flux-system.svc.cluster.local:9080/
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: pangolin
+    group: external
+    url: https://pangolin.patrickpedersen.tech
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+
 metrics: true
 
 storage:

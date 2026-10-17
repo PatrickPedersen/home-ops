@@ -70,6 +70,7 @@ spec:
           gatus.home-operations.com/enabled: "true"
           gatus.home-operations.com/endpoint: |-
             group: internal
+            ui: { hide-hostname: true, hide-url: true }
             url: http://jellyfin.media.svc.cluster.local:8096/health
             conditions: ["[STATUS] == 200", "[BODY] == Healthy"]
         ports:

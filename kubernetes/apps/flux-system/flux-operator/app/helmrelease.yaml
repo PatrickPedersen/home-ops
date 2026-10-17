@@ -21,6 +21,10 @@ spec:
               - flux-admin
       httpRoute:
         enabled: true
+        annotations:
+          # Checked by a static endpoint in gatus-sidecar's config instead;
+          # this chart can't annotate its Service.
+          gatus.home-operations.com/enabled: "false"
         hostnames:
           - flux-operator.${SECRET_DOMAIN}
         parentRefs:

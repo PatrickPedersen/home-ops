@@ -37,9 +37,21 @@ spec:
         name: authentik
         user: authentik
     server:
+      service:
+        # Real health check; see jellyfin for why the route isn't monitored.
+        annotations:
+          gatus.home-operations.com/enabled: "true"
+          gatus.home-operations.com/endpoint: |-
+            name: authentik-server
+            group: internal
+            ui: { hide-hostname: true, hide-url: true }
+            url: http://authentik-server.security.svc.cluster.local/-/health/live/
+            conditions: ["[STATUS] == 200"]
       route:
         main:
           enabled: true
+          annotations:
+            gatus.home-operations.com/enabled: "false"
           hostnames:
             - auth.${SECRET_DOMAIN}
           parentRefs:
