@@ -63,15 +63,14 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
     service:
       app:
-        # Monitored here instead of on the route: the route is public on
-        # purpose (Pangolin), which fails envoy-internal's "must not resolve
-        # publicly" guard, and a route can't opt out of that guard.
+        # Checked on its public URL, the path through Pangolin and Newt that
+        # family and the apps use. Not on the route: envoy-internal's "must not
+        # resolve publicly" guard fails for it, and a route can't opt out.
         annotations:
           gatus.home-operations.com/enabled: "true"
           gatus.home-operations.com/endpoint: |-
-            group: internal
-            ui: { hide-hostname: true, hide-url: true }
-            url: http://jellyfin.media.svc.cluster.local:8096/health
+            group: external
+            url: https://jellyfin.${SECRET_DOMAIN}/health
             conditions: ["[STATUS] == 200", "[BODY] == Healthy"]
         ports:
           http:
