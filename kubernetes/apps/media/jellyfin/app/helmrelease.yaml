@@ -1,0 +1,106 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jellyfin
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: jellyfin
+  interval: 1h
+  values:
+    controllers:
+      jellyfin:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/jellyfin/jellyfin
+              tag: 10.11.11@sha256:45f648c382a0c8b552582fcea40e95cb17c5d475473a891cba0eb7523fb92112
+            env:
+              TZ: Europe/Copenhagen
+              # Same paths as the old Debian LXC, so absolute paths stored in
+              # Jellyfin's database stay valid after the migration.
+              JELLYFIN_DATA_DIR: /var/lib/jellyfin
+              JELLYFIN_CONFIG_DIR: /etc/jellyfin
+              JELLYFIN_CACHE_DIR: /var/cache/jellyfin
+              JELLYFIN_LOG_DIR: /var/log/jellyfin
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: &port 8096
+                  periodSeconds: 10
+                  failureThreshold: 6
+              readiness: *probe
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: *port
+                  periodSeconds: 10
+                  failureThreshold: 60 # first start / DB migrations can take minutes
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 100m
+              limits:
+                devic.es/dri: 1 # Intel Quick Sync (renderD128)
+                memory: 8Gi
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100000
+        runAsGroup: 100000
+        fsGroup: 100000
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        hostnames:
+          - "{{ .Release.Name }}.${SECRET_DOMAIN}"
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+    persistence:
+      config:
+        type: persistentVolumeClaim
+        storageClass: openebs-hostpath
+        accessMode: ReadWriteOnce
+        size: 15Gi
+        advancedMounts:
+          jellyfin:
+            app:
+              - path: /var/lib/jellyfin
+                subPath: data
+              - path: /etc/jellyfin
+                subPath: etc
+              - path: /var/log/jellyfin
+                subPath: log
+      # Cache + transcodes: wiped on restart and capped, so heavy watching
+      # can't fill the node's 256GB disk.
+      cache:
+        type: emptyDir
+        sizeLimit: 20Gi
+        globalMounts:
+          - path: /var/cache/jellyfin
+      # Same /media path as the old LXC (it mounted /vault/media/media there),
+      # so library paths in the database don't change.
+      media:
+        existingClaim: media
+        globalMounts:
+          - path: /media
+            subPath: media
+      tmp:
+        type: emptyDir

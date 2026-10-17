@@ -1,0 +1,41 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: newt
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: newt
+  interval: 1h
+  values:
+    controllers:
+      newt:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            # Outbound-only tunnel to the Pangolin VPS (userspace WireGuard, no
+            # extra privileges). Targets are configured in Pangolin, e.g.
+            # jellyfin.media.svc.cluster.local:8096.
+            image:
+              repository: ghcr.io/fosrl/newt
+              tag: 1.18.1@sha256:7fed6605e0a104a337e1cb903bbb1225f80c7f6e5e56ff1eb1d70c57740d8e0f
+            envFrom:
+              - secretRef:
+                  name: newt-secret
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 256Mi
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
