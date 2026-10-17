@@ -54,6 +54,7 @@ spec:
             gatus.home-operations.com/enabled: "false"
           hostnames:
             - auth.${SECRET_DOMAIN}
+          # Public: OIDC logins (BookOrbit) happen in the browser from anywhere.
           parentRefs:
-            - name: envoy-internal
+            - name: envoy-external
               namespace: network

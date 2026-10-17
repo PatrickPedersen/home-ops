@@ -13,6 +13,7 @@ resources:
 configMapGenerator:
   - name: authentik-blueprints
     files:
+      - ./blueprints/bookorbit.yaml
       - ./blueprints/forward-auth.yaml
       - ./blueprints/ldap.yaml
 generatorOptions:
