@@ -13,17 +13,19 @@ Runbook for reinstalling pve01 as TrueNAS and importing the existing `vault` poo
 - `media` and `website` are **folders** in the root dataset `vault`, not datasets. NFS shares folders fine.
 - Active pool features all exist since OpenZFS 2.2, so any TrueNAS with ZFS ≥ 2.2 imports `vault`.
 - Everything written to the share is owned by UID/GID `100000`.
-- No SMB. NFS for the cluster (storage VLAN) and for Linux end devices (`192.168.100.0/24`).
+- No SMB. NFS for the cluster (storage VLAN); `website` is also shared with Linux end devices (`192.168.100.0/24`), `media` is not.
 
 ### Addresses
 
-| Purpose                  | Address                                    | VLAN | Notes                                              |
-| ------------------------ | ------------------------------------------ | ---- | -------------------------------------------------- |
-| Management (web UI, SSH) | `192.168.99.10/24`, gateway `192.168.99.1` | 99   | same as Proxmox today                              |
-| Storage (cluster NFS)    | `192.168.40.2/24`, no gateway              | 40   | unchanged, so the cluster only needs a path change |
-| NFS for end devices      | `192.168.10.5/24` (pick a free one)        | 10   | end devices can't reach the unrouted storage VLAN  |
+| Interface                   | Address                                               | Purpose                                                                    |
+| --------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| `enp7s0` (untagged VLAN 10) | `192.168.10.5/24`, **default gateway** `192.168.10.1` | NFS for desktops; the NAS's own outbound traffic (updates, B2 backup, NTP) |
+| `vlan99` on `enp7s0`        | `192.168.99.10/24`                                    | Management only: web UI, SSH. Never serves NFS                             |
+| `bond0` (untagged VLAN 40)  | `192.168.40.2/24`, no gateway, MTU 9000               | Cluster NFS. Unchanged, so the cluster only needs a path change            |
 
-All three are VLAN interfaces on a LACP link aggregation of the two 10G ports, like `vmbr0` on Proxmox (`bridge-vids 10 20 40 99`). MTU 1500.
+- `enp7s0` (onboard): its switch port has native VLAN 10 and VLAN 99 tagged. MTU 1500.
+- `bond0` is LACP over the two 10G ports, MTU 9000; UniFi Jumbo Frames must be on. Its switch ports have VLAN 40 as **native (untagged)**, like the k8s node's, so the address sits directly on `bond0`. A tagged `vlan40` interface receives nothing there.
+- Two routed addresses with one default gateway means replies to the management IP would leave via `enp7s0`'s VLAN 10, and the UDM's stateful firewall drops such asymmetric traffic. A source-based route sends everything **from** `192.168.99.10` out via `192.168.99.1` instead (see step 5).
 
 ## 1. Before (Proxmox still running)
 
@@ -88,20 +90,23 @@ If export says the pool is busy: `pct stop`/`qm stop` everything, then retry.
 1. **Unplug both WD Red disks** (SATA or power) with the machine off. The installer then can't see them, so a wrong pick can't wipe `vault`.
 2. Boot the installer (current stable TrueNAS Community Edition).
 3. Select `sda` (Samsung 850 EVO 250 GB). With the WD disks unplugged, the only other disks offered are the two NVMe.
-4. Reboot into TrueNAS. On the console, set the management interface to `192.168.99.10/24` so the web UI comes up where it was.
+4. Reboot into TrueNAS. Plug the onboard `enp7s0` into a switch port with native VLAN 10 and VLAN 99 tagged; it gets an address there (or set `192.168.10.5/24` on the console) to reach the web UI.
 5. Shut down, **plug the WD disks back in**, boot. Check Storage → Disks lists both serials (`WX82DA1EC1RY`, `WX92DA1631PK`) before importing.
 
 ## 5. Configure TrueNAS
 
-**Network** (Network → Interfaces):
+**Network** (Network → Interfaces). The installer's console setup is limited: give one port a temporary address on VLAN 99 (or plug the onboard `enp7s0` into a management port) to reach the web UI, then build the rest there. TrueNAS tests every network change and rolls it back unless confirmed.
 
-- Link aggregation `bond0`: LACP, the two 10G ports, no address.
-- VLAN 99 on `bond0`: `192.168.99.10/24`; global default gateway `192.168.99.1`, DNS `192.168.10.252`.
-- VLAN 40 on `bond0`: `192.168.40.2/24`.
-- VLAN 10 on `bond0`: `192.168.10.5/24`.
-- System → General → GUI: bind the web UI to `192.168.99.10` only.
+- `enp7s0`: `192.168.10.5/24`, MTU 1500 (switch port: native VLAN 10, VLAN 99 tagged).
+- VLAN `vlan99` on `enp7s0`: tag 99, `192.168.99.10/24`.
+- Link aggregation `bond0`: LACP, members `enp4s0f0np0` + `enp4s0f1np1`, hash policy LAYER2+3, MTU 9000, `192.168.40.2/24`.
+- Global configuration: default gateway `192.168.10.1`, nameserver `192.168.10.252`.
+- System → Advanced → Init/Shutdown Scripts, type Command, when Post Init, so management replies go back through the management gateway:
+  `ip route add default via 192.168.99.1 dev vlan99 table 99; ip rule add from 192.168.99.10 table 99`
+- System → General → GUI: bind the web UI to `192.168.99.10` only. System → Services → SSH: bind to `vlan99` only.
+- Proxmox disabled NIC offloading on both 10G ports (Intel X710, `i40e`) with `pre-up ethtool -K … tx off rx off tso off gso off gro off`. Not needed to get traffic flowing on TrueNAS; if NFS is slow or hangs, add it as an Init/Shutdown script (Command, Post Init): `for i in enp4s0f0np0 enp4s0f1np1; do ethtool -K $i tx off rx off tso off gso off gro off; done`
 
-Test before going on: `ping 192.168.40.10` (k8s node) from the TrueNAS shell.
+Test before going on, from the TrueNAS shell: `ping -c3 -M do -s 8972 192.168.40.10` (k8s node, full 9000-byte frames). If plain ping works but this doesn't, jumbo frames are off somewhere on the path.
 
 **Pool**: Storage → Import Pool → `vault`. It mounts at `/mnt/vault`.
 
@@ -117,14 +122,14 @@ Test before going on: `ping 192.168.40.10` (k8s node) from the TrueNAS shell.
 
 | Path                 | Networks                              | Mapall user / group | Read only |
 | -------------------- | ------------------------------------- | ------------------- | --------- |
-| `/mnt/vault/media`   | `192.168.40.0/24`, `192.168.100.0/24` | `media` / `media`   | no        |
+| `/mnt/vault/media`   | `192.168.40.0/24` (cluster only)      | `media` / `media`   | no        |
 | `/mnt/vault/website` | `192.168.40.0/24`, `192.168.100.0/24` | `media` / `media`   | no        |
 
 Mapall makes every client act as `100000`, which is what the apps run as and owns the files. Desktops can then edit freely without matching UIDs, and remote root never acts as root on the pool.
 
-NFS service settings: NFSv4 enabled, bind to `192.168.40.2` and `192.168.10.5`.
+NFS service settings: NFSv4 enabled, bind to `192.168.40.2` and `192.168.10.5` (never the management IP).
 
-**UniFi firewall**: allow End Devices (`192.168.100.0/24`) → `192.168.10.5` TCP 2049.
+**UniFi firewall**: allow End Devices (`192.168.100.0/24`) → `192.168.10.5` TCP 2049. For the web UI from a desktop, also End Devices → `192.168.99.10` TCP 443.
 
 ## 6. Point the cluster at the new paths
 
@@ -159,6 +164,76 @@ flux -n default resume hr games
 - `kubectl -n media exec deploy/radarr -- touch /data/media/.t && kubectl -n media exec deploy/radarr -- ls -ln /data/media/.t` shows owner `100000`; remove the file afterwards.
 - Gatus all green; Jellyfin plays something; qBittorrent resumes seeding (it rechecks nothing if paths are unchanged inside the pod).
 - From a desktop: `sudo mount -t nfs4 192.168.10.5:/mnt/vault/media /mnt/test`, create and delete a file.
+
+## 8. Nightly off-site backup (restic → B2)
+
+The irreplaceable folders (`Data`, `website`, `backup`, about 312 GB) go to the same B2 bucket as the cluster backups, under `vault/`. `media` is left out: it can be downloaded again, and would cost ten times as much to store.
+
+The repository was created and first filled from Proxmox before the switch. TrueNAS only continues it.
+
+TrueNAS has no package manager, so restic runs as a static binary from a root-only dataset on the pool:
+
+```sh
+zfs create vault/restic
+chmod 700 /mnt/vault/restic
+cd /mnt/vault/restic
+V=0.18.1   # current release from github.com/restic/restic/releases
+curl -fsSL https://github.com/restic/restic/releases/download/v$V/restic_${V}_linux_amd64.bz2 | bunzip2 > restic
+chmod 700 restic
+./restic version
+```
+
+Credentials, from 1Password (`backblaze`, `cluster-secrets`):
+
+```sh
+cat > /mnt/vault/restic/env <<'EOF'
+export AWS_ACCESS_KEY_ID=<B2_KEY_ID>
+export AWS_SECRET_ACCESS_KEY=<B2_APPLICATION_KEY>
+export RESTIC_PASSWORD=<RESTIC_PASSWORD>
+export RESTIC_REPOSITORY=s3:https://<B2_ENDPOINT>/<B2_BUCKET>/vault
+EOF
+chmod 600 /mnt/vault/restic/env
+```
+
+The script:
+
+```sh
+cat > /mnt/vault/restic/backup.sh <<'EOF'
+#!/bin/sh
+# Nightly off-site backup of the irreplaceable folders. Run by a TrueNAS cron job.
+set -eu
+. /mnt/vault/restic/env
+R="/mnt/vault/restic/restic --cache-dir /mnt/vault/restic/cache"
+$R backup --host vault /mnt/vault/Data /mnt/vault/website /mnt/vault/backup
+# Pruning rewrites data in B2, so only once a week (Sunday).
+if [ "$(date +%u)" = 7 ]; then
+  $R forget --host vault --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
+fi
+EOF
+chmod 700 /mnt/vault/restic/backup.sh
+/mnt/vault/restic/backup.sh    # first run by hand
+```
+
+The first TrueNAS run reads all 312 GB again (new paths, new host name), but uploads almost nothing: restic deduplicates against what Proxmox already sent.
+
+Schedule it in System → Advanced → Cron Jobs:
+
+| Field                | Value                                                            |
+| -------------------- | ---------------------------------------------------------------- |
+| Command              | `/mnt/vault/restic/backup.sh`                                    |
+| Run as               | `root`                                                           |
+| Schedule             | daily, 04:00 (after the cluster backups at 03:00)                |
+| Hide standard output | yes                                                              |
+| Hide standard error  | **no**, so failures are mailed (needs System → Email configured) |
+
+Check it now and then:
+
+```sh
+. /mnt/vault/restic/env && /mnt/vault/restic/restic snapshots --host vault
+```
+
+> [!IMPORTANT]
+> `RESTIC_PASSWORD` is the only way to decrypt this backup. It's in 1Password, and must stay somewhere outside this machine too.
 
 ## Later
 

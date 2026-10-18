@@ -1,7 +1,7 @@
 ---
 # Shared media + downloads tree. One volume so hardlinks/atomic moves work
-# between torrents/ and media/. After the TrueNAS switch only `path` changes
-# (/vault/media -> /mnt/vault/media); the storage IP stays 192.168.40.2.
+# between torrents/ and media/. Served by TrueNAS (NFSv4, all_squash to
+# 100000). The path is immutable: changing it means recreating PV and PVC.
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -15,7 +15,7 @@ spec:
   mountOptions: ["nfsvers=4.2", "nconnect=8", "hard", "noatime"]
   nfs:
     server: 192.168.40.2
-    path: /vault/media
+    path: /mnt/vault/media
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
