@@ -1,0 +1,80 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: games
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: games
+  interval: 1h
+  values:
+    controllers:
+      games:
+        containers:
+          app:
+            image:
+              repository: docker.io/library/caddy
+              tag: 2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+            # Same as the old LXC's default Caddyfile, but on an unprivileged port.
+            command: ["caddy", "file-server", "--root", "/srv", "--listen", ":8080"]
+            env:
+              # Caddy keeps its autosave config and state here.
+              XDG_CONFIG_HOME: /tmp
+              XDG_DATA_HOME: /tmp
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: &port 8080
+                  periodSeconds: 10
+                  failureThreshold: 6
+              readiness: *probe
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 5m
+              limits:
+                memory: 128Mi
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
+    service:
+      app:
+        # Real health check; see jellyfin for why the route isn't monitored.
+        annotations:
+          gatus.home-operations.com/enabled: "true"
+          gatus.home-operations.com/endpoint: |-
+            group: internal
+            ui: { hide-hostname: true, hide-url: true }
+            url: http://games.default.svc.cluster.local:8080/
+            conditions: ["[STATUS] == 200"]
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        annotations:
+          gatus.home-operations.com/enabled: "false"
+        hostnames:
+          - "{{ .Release.Name }}.${SECRET_DOMAIN}"
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
+    persistence:
+      website:
+        existingClaim: website
+        globalMounts:
+          - path: /srv
+            readOnly: true
+      tmp:
+        type: emptyDir

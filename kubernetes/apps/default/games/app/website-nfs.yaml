@@ -1,0 +1,29 @@
+---
+# Static site files, edited on the NAS. Read-only here.
+# After the TrueNAS switch only `path` changes (/vault/website -> /mnt/vault/website).
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: website-nfs
+spec:
+  capacity:
+    storage: 1Mi # informational only for static NFS
+  accessModes: ["ReadOnlyMany"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions: ["nfsvers=4.2", "hard", "noatime"]
+  nfs:
+    server: 192.168.40.2
+    path: /vault/website
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: website
+spec:
+  accessModes: ["ReadOnlyMany"]
+  storageClassName: ""
+  volumeName: website-nfs
+  resources:
+    requests:
+      storage: 1Mi
