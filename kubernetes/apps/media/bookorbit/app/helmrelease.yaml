@@ -97,5 +97,8 @@ spec:
         globalMounts:
           - path: /books
             subPath: books
+          # qBittorrent's downloads (/data/torrents there), for importing.
+          - path: /torrents
+            subPath: torrents
       tmp:
         type: emptyDir
