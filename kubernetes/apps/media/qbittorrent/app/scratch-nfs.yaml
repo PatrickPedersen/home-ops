@@ -1,0 +1,30 @@
+---
+# Incomplete downloads on the NVMe pool, so torrents' random writes don't
+# fragment the HDD mirror. qBittorrent moves finished torrents to /data.
+# Temporary data: no snapshots, no backup.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: scratch-nfs
+spec:
+  capacity:
+    storage: 1Mi # informational only for static NFS
+  accessModes: ["ReadWriteMany"]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions: ["nfsvers=4.2", "nconnect=8", "hard", "noatime"]
+  nfs:
+    server: 192.168.40.2
+    path: /mnt/Fast/scratch
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: scratch
+spec:
+  accessModes: ["ReadWriteMany"]
+  storageClassName: ""
+  volumeName: scratch-nfs
+  resources:
+    requests:
+      storage: 1Mi

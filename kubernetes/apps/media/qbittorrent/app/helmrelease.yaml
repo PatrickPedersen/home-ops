@@ -131,5 +131,10 @@ spec:
         existingClaim: media
         globalMounts:
           - path: /data
+      # "Keep incomplete torrents in" (Options → Downloads) points here.
+      scratch:
+        existingClaim: scratch
+        globalMounts:
+          - path: /incomplete
       tmp:
         type: emptyDir
