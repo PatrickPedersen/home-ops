@@ -54,6 +54,7 @@ All on `patrickpedersen.tech`.
 | `jellyfin`                               | internet (Pangolin) and LAN | Authentik (LDAP)       |
 | `radarr`, `sonarr`, `prowlarr`, `bazarr` | LAN                         | Authentik forward auth |
 | `qbittorrent`, `rdtclient`               | LAN                         | the app's own login    |
+| `games`                                  | LAN                         | none                   |
 | `flux-operator`, `hubble`                | LAN                         | none                   |
 
 Which gateway a route uses decides who can reach it: `envoy-external` is published through Cloudflare, `envoy-internal` only resolves on the LAN (via k8s-gateway). Jellyfin is the exception: it is internal in the cluster but published by Pangolin (Newt), with target `jellyfin.media.svc.cluster.local:8096`.
