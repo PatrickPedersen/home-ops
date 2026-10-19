@@ -21,3 +21,4 @@ resources:
   - ./rdtclient/ks.yaml
   - ./seerr/ks.yaml
   - ./sonarr/ks.yaml
+  - ./suwayomi/ks.yaml
