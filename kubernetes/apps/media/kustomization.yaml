@@ -15,6 +15,7 @@ resources:
   - ./bookorbit/ks.yaml
   - ./flaresolverr/ks.yaml
   - ./jellyfin/ks.yaml
+  - ./mangarr/ks.yaml
   - ./prowlarr/ks.yaml
   - ./qbittorrent/ks.yaml
   - ./radarr/ks.yaml
