@@ -171,14 +171,17 @@ The irreplaceable folders (`Data`, `website`, `backup`, about 312 GB) go to the 
 
 The repository was created and first filled from Proxmox before the switch. TrueNAS only continues it.
 
-TrueNAS has no package manager, so restic runs as a static binary from a root-only dataset on the pool:
+TrueNAS has no package manager, so restic runs as a static binary from a root-only dataset on the pool. Not from the admin's home directory: TrueNAS mounts that `noexec`. restic 0.18.1 crashed (SIGSEGV while reading files) on TrueNAS 25.10; use a current release.
 
 ```sh
 zfs create vault/restic
 chmod 700 /mnt/vault/restic
 cd /mnt/vault/restic
-V=0.18.1   # current release from github.com/restic/restic/releases
-curl -fsSL https://github.com/restic/restic/releases/download/v$V/restic_${V}_linux_amd64.bz2 | bunzip2 > restic
+V=0.19.1   # check github.com/restic/restic/releases for the current one
+curl -fsSLO https://github.com/restic/restic/releases/download/v$V/restic_${V}_linux_amd64.bz2
+curl -fsSLO https://github.com/restic/restic/releases/download/v$V/SHA256SUMS
+grep linux_amd64.bz2 SHA256SUMS | sha256sum -c   # must say OK
+bunzip2 -c restic_${V}_linux_amd64.bz2 > restic && rm restic_${V}_linux_amd64.bz2 SHA256SUMS
 chmod 700 restic
 ./restic version
 ```
@@ -203,6 +206,8 @@ cat > /mnt/vault/restic/backup.sh <<'EOF'
 # Nightly off-site backup of the irreplaceable folders. Run by a TrueNAS cron job.
 set -eu
 . /mnt/vault/restic/env
+# Without a terminal restic is silent until the end; log progress once a minute.
+export RESTIC_PROGRESS_FPS=0.016
 R="/mnt/vault/restic/restic --cache-dir /mnt/vault/restic/cache"
 $R backup --host vault /mnt/vault/Data /mnt/vault/website /mnt/vault/backup
 # Pruning rewrites data in B2, so only once a week (Sunday).
@@ -211,7 +216,8 @@ if [ "$(date +%u)" = 7 ]; then
 fi
 EOF
 chmod 700 /mnt/vault/restic/backup.sh
-/mnt/vault/restic/backup.sh    # first run by hand
+systemd-run --unit=restic-backup --property=Type=exec /mnt/vault/restic/backup.sh   # first run, detached from the terminal
+journalctl -fu restic-backup                                                          # follow it
 ```
 
 The first TrueNAS run reads all 312 GB again (new paths, new host name), but uploads almost nothing: restic deduplicates against what Proxmox already sent.
