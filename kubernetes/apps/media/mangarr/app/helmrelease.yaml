@@ -18,7 +18,7 @@ spec:
           app:
             image:
               repository: ghcr.io/patrickpedersen/mangarr
-              tag: 0.2.3@sha256:f447e6c1eac32ef558afe4cdcfa2e1125550ec85079c39af3ec85932dc411b50
+              tag: 0.2.4@sha256:f7c2f1e14bdb66e3a8ddd2d7af6fb2a8f3ac6bae56ad0cb10ffd8dab9322f9c5
             env:
               TZ: Europe/Copenhagen
               PORT: &port 3000
