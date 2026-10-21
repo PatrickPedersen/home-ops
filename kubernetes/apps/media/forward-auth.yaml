@@ -14,6 +14,7 @@ spec:
     - { group: gateway.networking.k8s.io, kind: HTTPRoute, name: prowlarr }
     - { group: gateway.networking.k8s.io, kind: HTTPRoute, name: radarr }
     - { group: gateway.networking.k8s.io, kind: HTTPRoute, name: sonarr }
+    - { group: gateway.networking.k8s.io, kind: HTTPRoute, name: suwayomi }
   extAuth:
     # HTTP ext auth only forwards Host, Method, Path and Authorization by
     # default; Authentik needs the session cookie and the original scheme.

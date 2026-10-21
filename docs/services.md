@@ -53,6 +53,7 @@ All on `patrickpedersen.tech`.
 | `status`                                 | internet (Cloudflare)       | none (Gatus)           |
 | `jellyfin`                               | internet (Pangolin) and LAN | Authentik (LDAP)       |
 | `radarr`, `sonarr`, `prowlarr`, `bazarr` | LAN                         | Authentik forward auth |
+| `mangarr`, `suwayomi`                    | LAN                         | Authentik forward auth |
 | `qbittorrent`, `rdtclient`               | LAN                         | the app's own login    |
 | `games`                                  | LAN                         | none                   |
 | `flux-operator`, `hubble`                | LAN                         | none                   |

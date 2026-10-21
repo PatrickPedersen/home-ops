@@ -20,14 +20,20 @@ spec:
             env:
               TZ: Europe/Copenhagen
               BIND_PORT: &port 4567
-              # Only Mangarr uses it as a source backend; the web UI is for
-              # installing extensions over a port-forward.
+              # Login is Authentik forward auth at the route; Mangarr uses the
+              # service directly.
               AUTH_MODE: none
               FLARESOLVERR_ENABLED: "true"
               FLARESOLVERR_URL: http://flaresolverr.media.svc.cluster.local:8191
               EXTENSION_STORES: '["https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json"]'
               # Mangarr does its own checking; Suwayomi's library updater stays off.
               UPDATE_INTERVAL: "0"
+              # Outbound traffic to sources via the shared VPN proxy
+              # (network/gluetun). Cluster services stay direct.
+              JAVA_TOOL_OPTIONS: >-
+                -Dhttp.proxyHost=gluetun.network.svc.cluster.local -Dhttp.proxyPort=8888
+                -Dhttps.proxyHost=gluetun.network.svc.cluster.local -Dhttps.proxyPort=8888
+                -Dhttp.nonProxyHosts=localhost|127.*|*.cluster.local
             probes:
               liveness: &probe
                 enabled: true
@@ -63,12 +69,30 @@ spec:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile: { type: RuntimeDefault }
-    # No route: only Mangarr talks to it, at http://suwayomi.media.svc.cluster.local:4567
+    # Mangarr talks to the service directly; the route is for the web UI.
     service:
       app:
+        # Real health check; see jellyfin for why the route isn't monitored.
+        annotations:
+          gatus.home-operations.com/enabled: "true"
+          gatus.home-operations.com/endpoint: |-
+            group: internal
+            ui: { hide-hostname: true, hide-url: true }
+            url: http://suwayomi.media.svc.cluster.local:4567/
+            conditions: ["[STATUS] == 200"]
         ports:
           http:
             port: *port
+    # AUTH_MODE none: Authentik forward auth guards it (media/forward-auth.yaml).
+    route:
+      app:
+        annotations:
+          gatus.home-operations.com/enabled: "false"
+        hostnames:
+          - "{{ .Release.Name }}.${SECRET_DOMAIN}"
+        parentRefs:
+          - name: envoy-internal
+            namespace: network
     persistence:
       config:
         type: persistentVolumeClaim
