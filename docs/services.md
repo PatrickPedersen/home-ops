@@ -23,7 +23,7 @@ Don't use the `*.patrickpedersen.tech` hostnames for this. The *arr UIs sit behi
 | qBittorrent    | `http://qbittorrent.media.svc.cluster.local:8080`    | WebUI username and password                                                                                                      |
 | rdtclient      | `http://rdtclient.media.svc.cluster.local:6500`      | its own login                                                                                                                    |
 | FlareSolverr   | `http://flaresolverr.media.svc.cluster.local:8191`   | none                                                                                                                             |
-| VPN HTTP proxy | `http://qbittorrent.media.svc.cluster.local:8888`    | none; Gluetun's proxy, exits through ProtonVPN. In Prowlarr: indexer proxy `ProtonVPN`, applies to indexers tagged `vpn`         |
+| VPN HTTP proxy | `http://gluetun.network.svc.cluster.local:8888`      | none; standalone Gluetun, exits through ProtonVPN. In Prowlarr: indexer proxy `ProtonVPN`, applies to indexers tagged `vpn`      |
 | Jellyfin       | `http://jellyfin.media.svc.cluster.local:8096`       | Dashboard → API Keys                                                                                                             |
 | Seerr          | `http://seerr.media.svc.cluster.local:5055`          | Settings → General → API Key                                                                                                     |
 | BookOrbit      | `http://bookorbit.media.svc.cluster.local:3000`      |                                                                                                                                  |

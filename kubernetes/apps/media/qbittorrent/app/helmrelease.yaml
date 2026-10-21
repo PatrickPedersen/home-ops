@@ -34,13 +34,9 @@ spec:
                 /bin/sh -c 'wget -O- -nv --retry-connrefused --post-data
                 "json={\"listen_port\":{{ "{{PORT}}" }},\"current_network_interface\":\"{{ "{{VPN_INTERFACE}}" }}\",\"random_port\":false,\"upnp\":false}"
                 http://127.0.0.1:8080/api/v2/app/setPreferences'
-              # HTTP proxy through the tunnel, used by Prowlarr for indexers
-              # blocked by the ISP (tag "vpn" in Prowlarr).
-              HTTPPROXY: "on"
-              HTTPPROXY_LISTENING_ADDRESS: ":8888"
-              # WebUI and proxy reachable from the cluster (Radarr/Sonarr,
-              # Envoy, probes, Prowlarr).
-              FIREWALL_INPUT_PORTS: "8080,8888"
+              # WebUI reachable from the cluster (Radarr/Sonarr, Envoy, probes).
+              # The shared VPN proxy for other apps is network/gluetun.
+              FIREWALL_INPUT_PORTS: "8080"
             envFrom:
               - secretRef:
                   name: qbittorrent-secret
@@ -110,8 +106,6 @@ spec:
         ports:
           http:
             port: *port
-          proxy:
-            port: 8888
     route:
       app:
         annotations:

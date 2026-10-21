@@ -1,0 +1,72 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: gluetun
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: gluetun
+  interval: 1h
+  values:
+    controllers:
+      gluetun:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            # Shared ProtonVPN exit for apps that need one, as an HTTP proxy
+            # (e.g. Prowlarr for ISP-blocked indexers, tag "vpn"). qBittorrent
+            # keeps its own sidecar for the kill switch and port forwarding.
+            image:
+              repository: ghcr.io/qdm12/gluetun
+              tag: v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027
+            env:
+              VPN_SERVICE_PROVIDER: protonvpn
+              VPN_TYPE: wireguard
+              HTTPPROXY: "on"
+              HTTPPROXY_LISTENING_ADDRESS: ":8888"
+              # Health endpoint for probes and Gatus (200 = tunnel up).
+              HEALTH_SERVER_ADDRESS: ":9999"
+              FIREWALL_INPUT_PORTS: "8888,9999"
+            envFrom:
+              - secretRef:
+                  name: gluetun-secret
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: 9999
+                  periodSeconds: 10
+                  failureThreshold: 6
+              readiness: *probe
+            securityContext:
+              runAsNonRoot: false
+              runAsUser: 0
+              runAsGroup: 0
+              capabilities: { add: ["NET_ADMIN"] }
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                devic.es/tun: 1
+                memory: 256Mi
+    service:
+      app:
+        # Real health check; see jellyfin for why routes aren't monitored.
+        annotations:
+          gatus.home-operations.com/enabled: "true"
+          gatus.home-operations.com/endpoint: |-
+            group: internal
+            ui: { hide-hostname: true, hide-url: true }
+            url: http://gluetun.network.svc.cluster.local:9999/
+            conditions: ["[STATUS] == 200"]
+        ports:
+          http:
+            port: 8888
+          health:
+            port: 9999
