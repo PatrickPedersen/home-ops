@@ -18,7 +18,6 @@ spec:
       namespace: volsync-system
   components:
     - ../../../../components/volsync
-    - ../../../../components/zeroscaler
   interval: 1h
   path: ./kubernetes/apps/media/bookorbit/app
   postBuild:
