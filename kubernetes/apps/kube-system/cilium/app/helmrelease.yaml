@@ -21,8 +21,13 @@ spec:
       automount:
         enabled: false
       hostRoot: /sys/fs/cgroup
-    # The stable bond name is defined in talos/all/20-network-links.yaml.tpl
-    devices: bond0+
+    # The stable bond names are defined in talos/all/20-network-links.yaml.tpl
+    # and talos/node/k8s-0/10-storage.yaml. bond1 (storage VLAN 40) is listed
+    # so pod traffic to the NAS is masqueraded to 192.168.40.10; the NAS has
+    # no route back to pod IPs.
+    devices: bond+
+    # Pin the pod MTU: bond1 runs MTU 9000, bond0 (and the default route) 1500.
+    MTU: 1500
     dashboards:
       enabled: true
     endpointRoutes:
