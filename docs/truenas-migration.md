@@ -241,6 +241,48 @@ Check it now and then:
 > [!IMPORTANT]
 > `RESTIC_PASSWORD` is the only way to decrypt this backup. It's in 1Password, and must stay somewhere outside this machine too.
 
+## 9. Metrics for Prometheus (ZFS and SMART)
+
+TrueNAS can't install packages, but its Apps run Docker containers. Both exporters listen on the **storage IP only** (`192.168.40.2`), where Prometheus in the cluster scrapes them (`kube-prometheus-stack/app/scrapeconfig.yaml`). Nothing is exposed on VLAN 10 or management.
+
+1. Apps → Configuration → Choose Pool: `Fast` (only needed once; app data and images live there).
+2. Apps → Discover Apps → ⋮ → **Install via YAML**, name `exporters`:
+
+    ```yaml
+    services:
+        # Host metrics incl. ZFS (pool state, ARC, I/O) from /proc/spl/kstat/zfs.
+        node-exporter:
+            image: quay.io/prometheus/node-exporter:v1.9.1
+            command:
+                - --path.rootfs=/host
+                - --web.listen-address=192.168.40.2:9100
+            network_mode: host
+            pid: host
+            volumes:
+                - /:/host:ro,rslave
+            restart: unless-stopped
+        # Runs smartctl against every disk on each scrape (every 2 min).
+        smartctl-exporter:
+            image: quay.io/prometheuscommunity/smartctl-exporter:v0.14.0
+            command:
+                - --web.listen-address=192.168.40.2:9633
+            network_mode: host
+            privileged: true
+            user: root
+            restart: unless-stopped
+    ```
+
+3. Check from the TrueNAS shell:
+
+    ```sh
+    curl -s 192.168.40.2:9100/metrics | grep -m3 node_zfs_zpool_state
+    curl -s 192.168.40.2:9633/metrics | grep -m3 smartctl_device_smart_status
+    ```
+
+4. In Prometheus (Status → Targets) both `nas01` targets should be up.
+
+Renovate doesn't see these images; bump the tags by hand now and then.
+
 ## Later
 
 - Wipe the NVMe disks and create a fast pool if wanted.
