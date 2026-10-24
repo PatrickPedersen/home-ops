@@ -22,6 +22,10 @@ spec:
               TZ: Europe/Copenhagen
               PUID: "100000"
               PGID: "100000"
+              # Otherwise every start runs `chown -R /data` over the whole NFS
+              # media tree (already owned by 100000 via mapall); the liveness
+              # probe kills it before that finishes.
+              SKIP_CHOWN: "true"
             probes:
               liveness: &probe
                 enabled: true
