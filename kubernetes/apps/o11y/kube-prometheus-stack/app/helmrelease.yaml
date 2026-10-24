@@ -29,6 +29,9 @@ spec:
           name: alertmanager
         externalUrl: https://alertmanager.${SECRET_DOMAIN}
         storage:
+          # openebs-hostpath: kubelet can't create the subPath dir (it sees
+          # the volume read-only); the volume root is world-writable.
+          disableMountSubPath: true
           volumeClaimTemplate:
             spec:
               storageClassName: openebs-hostpath
@@ -62,9 +65,11 @@ spec:
         resources:
           requests:
             cpu: 100m
+            memory: 1Gi
           limits:
             memory: 4Gi
         storageSpec:
+          disableMountSubPath: true # see alertmanager
           volumeClaimTemplate:
             spec:
               storageClassName: openebs-hostpath

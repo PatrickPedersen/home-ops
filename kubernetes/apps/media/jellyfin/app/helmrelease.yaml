@@ -49,8 +49,11 @@ spec:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
             resources:
+              # Explicit memory request: without one it defaults to the limit,
+              # which reserved 8Gi of the node for a ~0.5Gi app.
               requests:
                 cpu: 100m
+                memory: 1Gi
               limits:
                 devic.es/dri: 1 # Intel Quick Sync (renderD128)
                 memory: 8Gi
