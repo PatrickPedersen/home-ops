@@ -1,0 +1,29 @@
+---
+# NAS01 (TrueNAS) runs node-exporter and smartctl-exporter as Custom Apps,
+# listening on its storage IP only. See docs/truenas-migration.md.
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/scrapeconfig_v1alpha1.json
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: nas01-node-exporter
+spec:
+  jobName: node-exporter
+  staticConfigs:
+    - targets: ["192.168.40.2:9100"]
+  relabelings:
+    - targetLabel: instance
+      replacement: nas01
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/monitoring.coreos.com/scrapeconfig_v1alpha1.json
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: nas01-smartctl-exporter
+spec:
+  jobName: smartctl-exporter
+  scrapeInterval: 2m # each scrape runs smartctl against every disk
+  staticConfigs:
+    - targets: ["192.168.40.2:9633"]
+  relabelings:
+    - targetLabel: instance
+      replacement: nas01
