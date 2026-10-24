@@ -5,6 +5,7 @@ namespace: kube-system
 
 components:
   - ../../components/cluster-secrets
+  - ../../components/alerts
 
 resources:
   - ./namespace.yaml
