@@ -88,13 +88,20 @@ The B2 copy of `Data`, `website` and `backup` is from Proxmox on 2026-10-17 and 
 - [ ] Test a CNPG restore (marked untested in [backup-and-restore.md](backup-and-restore.md)), e.g. Authentik into a scratch cluster.
 - [x] Keep `RESTIC_PASSWORD` somewhere outside the cluster and the NAS as well.
 
-## 8. Cleanup on the workstation
+## 8. Cluster
+
+- [ ] openebs-hostpath volumes are **read-only from kubelet's view**. Containers get a writable mount, but kubelet can't chown/chmod them (`lchown …/volumes/kubernetes.io~local-volume/pvc-…: read-only file system` in `talosctl logs kubelet`). Effects:
+    - `fsGroup` is never applied; apps only work because openebs creates the folders world-writable (`0777`).
+    - `subPath` mounts fail with `failed to create subPath directory`. Worked around for Prometheus/Alertmanager with `disableMountSubPath: true`.
+    - Fix on the Talos side: kubelet needs `/var/mnt/openebs/local` mounted read-write. Talos 1.14's `KubeletConfig` no longer has `extraMounts`, so find the current way (maybe a `UserVolumeConfig` for openebs, or the mount propagation of `/var/mnt`). Afterwards drop `disableMountSubPath` again.
+
+## 9. Cleanup on the workstation
 
 These contain password hashes / secrets:
 
 - [x] `rm ~/bookorbit.sql`
 - [x] `rm ~/Downloads/bazarr_backup_v1.6.2_2026.10.17_17.21.00.zip`
-- [ ] `rm ~/Downloads/{sonarr,radarr,prowlarr}_backup_*.zip` (migration backups with API keys and password hashes)
+- [x] `rm ~/Downloads/{sonarr,radarr,prowlarr}_backup_*.zip` (migration backups with API keys and password hashes)
 
 ## Done (for reference)
 
