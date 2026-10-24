@@ -12,6 +12,7 @@ spec:
       namespace: openebs-system
   components:
     - ../../../../components/volsync
+    - ../../../../components/zeroscaler
   interval: 1h
   path: ./kubernetes/apps/media/radarr/app
   postBuild:
