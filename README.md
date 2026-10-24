@@ -1,4 +1,29 @@
+<div align="center">
+
 # ⛵ home-ops
+
+_Single-node Talos cluster, managed with Flux, backed by TrueNAS_
+
+[![Home-Internet](https://kromgo.patrickpedersen.tech/badges/home_ping)](https://status.patrickpedersen.tech)&nbsp;&nbsp;
+[![Status-Page](https://kromgo.patrickpedersen.tech/badges/gatus_status_page)](https://status.patrickpedersen.tech)&nbsp;&nbsp;
+[![Alertmanager](https://kromgo.patrickpedersen.tech/badges/alertmanager_heartbeat)](https://status.patrickpedersen.tech)
+
+[![Talos](https://kromgo.patrickpedersen.tech/badges/talos_version)](https://talos.dev)&nbsp;&nbsp;
+[![Kubernetes](https://kromgo.patrickpedersen.tech/badges/kubernetes_version)](https://kubernetes.io)&nbsp;&nbsp;
+[![Flux](https://kromgo.patrickpedersen.tech/badges/flux_version)](https://fluxcd.io)&nbsp;&nbsp;
+[![Renovate](https://img.shields.io/badge/renovate-enabled-blue?logo=renovate)](https://github.com/renovatebot/renovate)
+
+![Age](https://kromgo.patrickpedersen.tech/badges/cluster_birth_age)&nbsp;&nbsp;
+![Uptime](https://kromgo.patrickpedersen.tech/badges/cluster_uptime_age)&nbsp;&nbsp;
+![Nodes](https://kromgo.patrickpedersen.tech/badges/cluster_node_count)&nbsp;&nbsp;
+![Pods](https://kromgo.patrickpedersen.tech/badges/cluster_pod_count)&nbsp;&nbsp;
+![CPU](https://kromgo.patrickpedersen.tech/badges/cluster_cpu_usage)&nbsp;&nbsp;
+![Memory](https://kromgo.patrickpedersen.tech/badges/cluster_memory_usage)&nbsp;&nbsp;
+![Alerts](https://kromgo.patrickpedersen.tech/badges/cluster_alert_count)
+
+</div>
+
+---
 
 GitOps repository for my homelab: a single-node [Talos](https://www.talos.dev) Kubernetes cluster managed by [Flux](https://fluxcd.io), with a [TrueNAS](https://www.truenas.com) box for storage. Started from [onedr0p/cluster-template](https://github.com/onedr0p/cluster-template); [Renovate](https://www.mend.io/renovate) keeps everything up to date.
 
