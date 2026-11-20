@@ -25,6 +25,9 @@ spec:
               AUTH_MODE: none
               FLARESOLVERR_ENABLED: "true"
               FLARESOLVERR_URL: http://flaresolverr.media.svc.cluster.local:8191
+              # Cloudflare blocks OkHttp's fingerprint even with cookies; use
+              # FlareSolverr's page instead.
+              FLARESOLVERR_RESPONSE_AS_FALLBACK: "true"
               EXTENSION_STORES: '["https://raw.githubusercontent.com/keiyoushi/extensions/repo/index.min.json"]'
               # Mangarr does its own checking; Suwayomi's library updater stays off.
               UPDATE_INTERVAL: "0"

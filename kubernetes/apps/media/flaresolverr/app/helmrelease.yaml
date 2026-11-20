@@ -19,6 +19,9 @@ spec:
               tag: v3.5.2@sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
             env:
               TZ: Europe/Copenhagen
+              # Default proxy for requests that don't set one. Must match
+              # Suwayomi's egress (gluetun): cf_clearance is bound to the IP.
+              PROXY_URL: http://gluetun.network.svc.cluster.local:8888
             probes:
               liveness: &probe
                 enabled: true
@@ -32,7 +35,7 @@ spec:
               requests:
                 cpu: 10m
               limits:
-                memory: 1Gi
+                memory: 2Gi
     # No route: only Prowlarr talks to it, at http://flaresolverr.media.svc.cluster.local:8191
     service:
       app:
